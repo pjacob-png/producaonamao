@@ -18,7 +18,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login(email, password, lgpdConsent);
-      router.push("/");
+      router.push("/dashboard");
     } catch (err: any) {
       if (err.response?.status === 451) {
         setNeedsConsent(true);

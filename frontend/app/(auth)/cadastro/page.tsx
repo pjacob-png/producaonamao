@@ -51,7 +51,7 @@ function CadastroContent() {
         setStep(3);
       } else {
         toast.success("Conta criada! Bem-vindo ao Produção na Mão 🍳");
-        router.push("/");
+        router.push("/dashboard");
       }
     } catch (e: any) {
       const detail = e.response?.data?.detail;
