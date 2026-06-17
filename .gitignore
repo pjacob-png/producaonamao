@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# Backend secrets — NUNCA commitar
+backend/.env
+backend/uploads/
+
+# Frontend
+frontend/node_modules/
+frontend/.next/
+frontend/.env.local
+
+# Sistema
+.DS_Store
+Thumbs.db
+*.log
