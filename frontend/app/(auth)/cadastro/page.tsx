@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
@@ -13,7 +13,7 @@ const PLANS = [
   { slug: "network", name: "Rede",    price: "R$ 399/mês", desc: "Ilimitado · WhatsApp · ERP" },
 ];
 
-export default function CadastroPage() {
+function CadastroContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login } = useAuth();
@@ -206,5 +206,17 @@ export default function CadastroPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function CadastroPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500" />
+      </div>
+    }>
+      <CadastroContent />
+    </Suspense>
   );
 }
