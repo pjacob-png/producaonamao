@@ -166,6 +166,7 @@ async def register(
                 plan_name=body.plan.title(),
                 amount=amount,
                 billing_type=body.billing_type,
+                next_due_date=trial_ends.date().isoformat(),
             )
             subscription.asaas_customer_id = customer["id"]
             subscription.asaas_subscription_id = sub["id"]

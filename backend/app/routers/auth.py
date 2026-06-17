@@ -62,8 +62,11 @@ async def login(
         expires_in=settings.access_token_expire_minutes * 60,
         user_name=user.name,
         user_role=user.role,
+        user_email=user.email,
+        user_phone=user.phone,
         tenant_id=str(user.tenant_id),
         tenant_name=tenant.name,
+        tenant_plan=tenant.plan,
     )
 
 

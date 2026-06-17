@@ -213,11 +213,11 @@ export default function LandingPage() {
             <span className="font-medium text-gray-600">Produção na Mão</span>
           </div>
           <div className="flex gap-6">
-            <a href="#" className="hover:text-gray-600">Termos de Uso</a>
-            <a href="#" className="hover:text-gray-600">Privacidade</a>
+            <Link href="/termos" className="hover:text-gray-600">Termos de Uso</Link>
+            <Link href="/privacidade" className="hover:text-gray-600">Privacidade</Link>
             <a href="mailto:contato@producaonamao.com.br" className="hover:text-gray-600">Contato</a>
           </div>
-          <p>© 2025 Produção na Mão · LGPD em conformidade</p>
+          <p>© 2026 Produção na Mão · LGPD em conformidade</p>
         </div>
       </footer>
     </div>

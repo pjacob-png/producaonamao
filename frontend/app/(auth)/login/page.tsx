@@ -55,9 +55,9 @@ export default function LoginPage() {
               <input type="checkbox" checked={lgpdConsent} onChange={(e) => setLgpdConsent(e.target.checked)} className="mt-0.5 accent-brand-500" />
               <span>
                 Concordo com os{" "}
-                <a href="#" className="text-brand-600 underline">Termos de Uso</a>{" "}
+                <a href="/termos" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">Termos de Uso</a>{" "}
                 e a{" "}
-                <a href="#" className="text-brand-600 underline">Política de Privacidade</a>{" "}
+                <a href="/privacidade" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">Política de Privacidade</a>{" "}
                 (LGPD — Lei 13.709/2018)
               </span>
             </label>

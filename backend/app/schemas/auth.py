@@ -13,8 +13,11 @@ class TokenResponse(BaseModel):
     expires_in: int
     user_name: str
     user_role: str
+    user_email: str = ""
+    user_phone: str | None = None
     tenant_id: str
     tenant_name: str
+    tenant_plan: str = "basic"
 
 
 class RefreshRequest(BaseModel):

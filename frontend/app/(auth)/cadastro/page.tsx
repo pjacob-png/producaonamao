@@ -156,9 +156,9 @@ function CadastroContent() {
                 <input type="checkbox" checked={form.lgpd_consent} onChange={(e) => set("lgpd_consent", e.target.checked)} className="mt-0.5 accent-brand-500" />
                 <span>
                   Li e concordo com os{" "}
-                  <a href="#" className="text-brand-600 underline">Termos de Uso</a>{" "}
+                  <a href="/termos" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">Termos de Uso</a>{" "}
                   e a{" "}
-                  <a href="#" className="text-brand-600 underline">Política de Privacidade</a>.
+                  <a href="/privacidade" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">Política de Privacidade</a>.
                   Meus dados são protegidos conforme a LGPD.
                 </span>
               </label>
@@ -191,7 +191,7 @@ function CadastroContent() {
                   </a>
                 </div>
               )}
-              <button onClick={() => router.push("/")} className="btn-primary w-full">
+              <button onClick={() => router.push("/dashboard")} className="btn-primary w-full">
                 Ir para o sistema
               </button>
             </div>
