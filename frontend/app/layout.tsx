@@ -9,6 +9,9 @@ export const metadata: Metadata = {
   title: "Produção na Mão",
   description: "Gestão de fichas técnicas, CMV e markup para restaurantes",
   manifest: "/manifest.json",
+};
+
+export const viewport = {
   themeColor: "#f97316",
 };
 

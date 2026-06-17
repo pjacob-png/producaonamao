@@ -1,13 +1,21 @@
 {
   "name": "Produção na Mão",
-  "short_name": "Prod. Mão",
-  "description": "Gestão de fichas técnicas e CMV para restaurantes",
+  "short_name": "Produção",
+  "description": "Gestão de fichas técnicas, CMV e markup para restaurantes",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "background_color": "#f9fafb",
   "theme_color": "#f97316",
   "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
   ]
 }
