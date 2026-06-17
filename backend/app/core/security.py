@@ -11,7 +11,9 @@ _fernet = Fernet(settings.encryption_key.encode())
 
 
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password.encode("utf-8")[:72])
+    # bcrypt suporta no maximo 72 bytes
+    safe = password.encode("utf-8")[:72].decode("utf-8", errors="ignore")
+    return pwd_context.hash(safe)
 
 
 def verify_password(plain: str, hashed: str) -> bool:
