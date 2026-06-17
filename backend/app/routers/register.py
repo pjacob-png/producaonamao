@@ -61,6 +61,8 @@ class RegisterRequest(BaseModel):
     def strong_password(cls, v):
         if len(v) < 8:
             raise ValueError("Senha mínima de 8 caracteres")
+        if len(v.encode("utf-8")) > 72:
+            raise ValueError("Senha não pode ter mais de 72 caracteres")
         return v
 
 

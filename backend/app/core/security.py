@@ -11,7 +11,7 @@ _fernet = Fernet(settings.encryption_key.encode())
 
 
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    return pwd_context.hash(password.encode("utf-8")[:72])
 
 
 def verify_password(plain: str, hashed: str) -> bool:
