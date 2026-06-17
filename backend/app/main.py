@@ -11,8 +11,10 @@ from app.routers import auth, ingredients, products, recipes, markup, reports, w
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Cria tabelas na inicialização (em produção usar Alembic)
-    await create_tables()
+    try:
+        await create_tables()
+    except Exception as e:
+        print(f"[WARN] create_tables falhou: {e}")
     os.makedirs(settings.local_upload_dir, exist_ok=True)
     yield
 
