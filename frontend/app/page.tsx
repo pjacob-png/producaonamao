@@ -77,7 +77,7 @@ export default function LandingPage() {
 
   useEffect(() => {
     const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
-    if (token) router.replace("/");
+    if (token) router.replace("/dashboard");
   }, []);
 
   return (
