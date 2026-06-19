@@ -84,3 +84,34 @@ export const whatsappApi = {
   sendFicha: (productId: string, phone: string) =>
     api.post("/whatsapp/send-ficha", { product_id: productId, phone }),
 };
+
+// ── Importação Excel ──────────────────────────────────────────────────────────
+function _downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export const importsApi = {
+  downloadIngredientTemplate: async () => {
+    const r = await api.get("/import/template/ingredients", { responseType: "blob" });
+    _downloadBlob(r.data, "modelo_insumos.xlsx");
+  },
+  importIngredients: (file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+    return api.post("/import/ingredients", form, { headers: { "Content-Type": "multipart/form-data" } });
+  },
+  downloadProductTemplate: async () => {
+    const r = await api.get("/import/template/products", { responseType: "blob" });
+    _downloadBlob(r.data, "modelo_produtos.xlsx");
+  },
+  importProducts: (file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+    return api.post("/import/products", form, { headers: { "Content-Type": "multipart/form-data" } });
+  },
+};

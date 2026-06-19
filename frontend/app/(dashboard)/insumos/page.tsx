@@ -1,8 +1,8 @@
 "use client";
-import { useEffect, useState } from "react";
-import { ingredientsApi } from "@/lib/api";
+import { useEffect, useState, useRef } from "react";
+import { ingredientsApi, importsApi } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import { Plus, Search, Pencil, Trash2, X, Check } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, X, Check, Download, Upload, AlertTriangle } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function InsumosPage() {
@@ -16,6 +16,9 @@ export default function InsumosPage() {
   const [form, setForm] = useState({ code: "", name: "", category: "", unit_of_measure: "kg", unit_cost: "", supplier: "" });
 
   const units = ["kg", "g", "L", "ml", "un", "cx", "pc", "pct"];
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{ criados: number; erros: any[] } | null>(null);
 
   useEffect(() => {
     load();
@@ -61,17 +64,69 @@ export default function InsumosPage() {
     catch { toast.error("Erro ao remover"); }
   }
 
+  async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+    setImporting(true);
+    setImportResult(null);
+    try {
+      const r = await importsApi.importIngredients(file);
+      setImportResult(r.data);
+      if (r.data.criados > 0) {
+        toast.success(`${r.data.criados} insumo(s) importado(s)!`);
+        load();
+      }
+      if (r.data.erros.length > 0 && r.data.criados === 0) {
+        toast.error("Nenhum insumo importado — verifique os erros abaixo");
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || "Erro ao importar arquivo");
+    } finally {
+      setImporting(false);
+    }
+  }
+
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
+      <input ref={fileInputRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={handleImport} />
+
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <p className="text-gray-500 text-sm">{ingredients.length} insumo(s)</p>
         {isAdmin && (
-          <button onClick={() => { setShowForm(true); setEditingId(null); setForm({ code: "", name: "", category: "", unit_of_measure: "kg", unit_cost: "", supplier: "" }); }}
-            className="btn-primary flex items-center gap-2 text-sm">
-            <Plus size={16} /> Novo insumo
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={() => importsApi.downloadIngredientTemplate().catch(() => toast.error("Erro ao baixar modelo"))}
+              className="btn-secondary flex items-center gap-1.5 text-sm">
+              <Download size={15} /> Exportar modelo
+            </button>
+            <button onClick={() => fileInputRef.current?.click()} disabled={importing}
+              className="btn-secondary flex items-center gap-1.5 text-sm">
+              <Upload size={15} /> {importing ? "Importando..." : "Importar Excel"}
+            </button>
+            <button onClick={() => { setShowForm(true); setEditingId(null); setForm({ code: "", name: "", category: "", unit_of_measure: "kg", unit_cost: "", supplier: "" }); }}
+              className="btn-primary flex items-center gap-2 text-sm">
+              <Plus size={16} /> Novo insumo
+            </button>
+          </div>
         )}
       </div>
+
+      {importResult && (
+        <div className={`rounded-xl border px-4 py-3 text-sm space-y-2 ${importResult.erros.length > 0 ? "bg-yellow-50 border-yellow-200" : "bg-green-50 border-green-200"}`}>
+          <p className="font-semibold">
+            {importResult.criados > 0 && <span className="text-green-700">{importResult.criados} insumo(s) criado(s). </span>}
+            {importResult.erros.length > 0 && <span className="text-yellow-700 flex items-center gap-1"><AlertTriangle size={14} />{importResult.erros.length} erro(s) encontrado(s):</span>}
+          </p>
+          {importResult.erros.length > 0 && (
+            <ul className="list-disc list-inside space-y-0.5 text-yellow-800 max-h-40 overflow-y-auto">
+              {importResult.erros.map((e, i) => (
+                <li key={i}>Linha {e.linha}: {e.erro}</li>
+              ))}
+            </ul>
+          )}
+          <button onClick={() => setImportResult(null)} className="text-xs text-gray-400 underline">Fechar</button>
+        </div>
+      )}
 
       <div className="relative">
         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />

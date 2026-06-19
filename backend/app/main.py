@@ -6,7 +6,7 @@ import os
 
 from app.config import settings
 from app.database import create_tables
-from app.routers import auth, ingredients, products, recipes, markup, reports, whatsapp, ai_chat, register, webhooks, users
+from app.routers import auth, ingredients, products, recipes, markup, reports, whatsapp, ai_chat, register, webhooks, users, imports
 
 
 @asynccontextmanager
@@ -52,6 +52,7 @@ app.include_router(ai_chat.router, prefix=api_prefix)
 app.include_router(register.router, prefix=api_prefix)
 app.include_router(webhooks.router, prefix=api_prefix)
 app.include_router(users.router, prefix=api_prefix)
+app.include_router(imports.router, prefix=api_prefix)
 
 
 @app.get("/health")

@@ -1,9 +1,10 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
-import { productsApi } from "@/lib/api";
+import { productsApi, importsApi } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import { Plus, Search, ChefHat } from "lucide-react";
+import { Plus, Search, ChefHat, Download, Upload, AlertTriangle } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function ProdutosPage() {
   const { user } = useAuth();
@@ -12,25 +13,91 @@ export default function ProdutosPage() {
   const [search, setSearch] = useState("");
   const [curva, setCurva] = useState("");
   const [loading, setLoading] = useState(true);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{ criados: number; erros: any[] } | null>(null);
 
-  useEffect(() => {
+  function load() {
     setLoading(true);
     productsApi.list({ search: search || undefined, abc_curve: curva || undefined })
       .then((r) => setProducts(r.data))
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [search, curva]);
+  }
+
+  useEffect(() => { load(); }, [search, curva]);
+
+  async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+    setImporting(true);
+    setImportResult(null);
+    try {
+      const r = await importsApi.importProducts(file);
+      setImportResult(r.data);
+      if (r.data.criados > 0) {
+        toast.success(`${r.data.criados} produto(s) importado(s)!`);
+        load();
+      }
+      if (r.data.erros.length > 0 && r.data.criados === 0) {
+        toast.error("Nenhum produto importado — verifique os erros abaixo");
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || "Erro ao importar arquivo");
+    } finally {
+      setImporting(false);
+    }
+  }
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
+      <input ref={fileInputRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={handleImport} />
+
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <p className="text-gray-500 text-sm">{products.length} produto(s)</p>
         {isAdmin && (
-          <Link href="/produtos/novo" className="btn-primary flex items-center gap-2 text-sm">
-            <Plus size={16} /> Novo produto
-          </Link>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => importsApi.downloadProductTemplate().catch(() => toast.error("Erro ao baixar modelo"))}
+              className="btn-secondary flex items-center gap-1.5 text-sm"
+            >
+              <Download size={15} /> Exportar modelo
+            </button>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={importing}
+              className="btn-secondary flex items-center gap-1.5 text-sm"
+            >
+              <Upload size={15} /> {importing ? "Importando..." : "Importar Excel"}
+            </button>
+            <Link href="/produtos/novo" className="btn-primary flex items-center gap-2 text-sm">
+              <Plus size={16} /> Novo produto
+            </Link>
+          </div>
         )}
       </div>
+
+      {importResult && (
+        <div className={`rounded-xl border px-4 py-3 text-sm space-y-2 ${importResult.erros.length > 0 ? "bg-yellow-50 border-yellow-200" : "bg-green-50 border-green-200"}`}>
+          <p className="font-semibold">
+            {importResult.criados > 0 && <span className="text-green-700">{importResult.criados} produto(s) criado(s). </span>}
+            {importResult.erros.length > 0 && (
+              <span className="text-yellow-700 flex items-center gap-1">
+                <AlertTriangle size={14} />{importResult.erros.length} erro(s) encontrado(s):
+              </span>
+            )}
+          </p>
+          {importResult.erros.length > 0 && (
+            <ul className="list-disc list-inside space-y-0.5 text-yellow-800 max-h-40 overflow-y-auto">
+              {importResult.erros.map((e, i) => (
+                <li key={i}>Linha {e.linha}: {e.erro}</li>
+              ))}
+            </ul>
+          )}
+          <button onClick={() => setImportResult(null)} className="text-xs text-gray-400 underline">Fechar</button>
+        </div>
+      )}
 
       <div className="flex gap-3">
         <div className="relative flex-1">
