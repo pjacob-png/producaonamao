@@ -12,7 +12,7 @@ export default function MarkupPage() {
   const [loadingPrices, setLoadingPrices] = useState(false);
   const [tab, setTab] = useState<"rules" | "prices" | "promos">("rules");
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ name: "", applies_to: "global", markup_type: "percentage_over_cost", markup_value: "", priority: "0", abc_curve: "" });
+  const [form, setForm] = useState({ name: "", applies_to: "global", markup_type: "percentage_over_cost", markup_value: "", priority: "0", abc_curve: "A" });
 
   useEffect(() => {
     markupApi.listRules().then((r) => setRules(r.data)).catch(() => {});
@@ -85,7 +85,10 @@ export default function MarkupPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div><label className="block text-xs text-gray-500 mb-1">Nome da regra</label><input className="input text-sm" placeholder="Markup padrão" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
                 <div><label className="block text-xs text-gray-500 mb-1">Aplica-se a</label>
-                  <select className="input text-sm" value={form.applies_to} onChange={(e) => setForm({ ...form, applies_to: e.target.value })}>
+                  <select className="input text-sm" value={form.applies_to} onChange={(e) => {
+                    const val = e.target.value;
+                    setForm({ ...form, applies_to: val, abc_curve: val === "curve" ? (form.abc_curve || "A") : "A" });
+                  }}>
                     <option value="global">Global (todos os produtos)</option>
                     <option value="curve">Curva ABC específica</option>
                     <option value="category">Categoria específica</option>
@@ -118,7 +121,9 @@ export default function MarkupPage() {
               <div key={r.id} className="card flex items-center justify-between py-3">
                 <div>
                   <span className="font-medium text-sm">{r.name}</span>
-                  <span className="ml-3 text-xs text-gray-500">{r.applies_to === "global" ? "Global" : r.applies_to === "curve" ? `Curva ${r.abc_curve}` : "Por categoria"}</span>
+                  <span className="ml-3 text-xs text-gray-500">
+                    {r.applies_to === "global" ? "Global" : r.applies_to === "curve" ? (r.abc_curve ? `Curva ${r.abc_curve}` : <span className="text-red-500">⚠ Curva inválida — exclua e recrie</span>) : "Por categoria"}
+                  </span>
                   <span className="ml-3 text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded">{r.markup_type === "percentage_over_cost" ? `${r.markup_value}% s/ custo` : `Margem ${r.markup_value}%`}</span>
                   <span className="ml-2 text-xs text-gray-400">prioridade: {r.priority}</span>
                 </div>
