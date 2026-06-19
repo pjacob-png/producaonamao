@@ -58,15 +58,15 @@ def _excel_response(wb: openpyxl.Workbook, filename: str) -> StreamingResponse:
 # ─── INSUMOS ─────────────────────────────────────────────────────────────────
 
 _ING_COLS = [
+    ("codigo *", 15),
     ("nome *", 30),
     ("unidade_de_medida *", 20),
     ("custo_unitario *", 18),
-    ("codigo", 15),
     ("categoria", 20),
     ("fornecedor", 25),
     ("observacoes", 35),
 ]
-_ING_SAMPLE = ["Farinha de Trigo", "kg", "3.50", "FT001", "Secos", "Distribuidora X", "Armazenar em local seco"]
+_ING_SAMPLE = ["FT001", "Farinha de Trigo", "kg", "3.50", "Secos", "Distribuidora X", "Armazenar em local seco"]
 _UNITS = "kg,g,L,ml,un,cx,pct,ds,lt,sc"
 
 
@@ -93,12 +93,12 @@ async def template_ingredients(current_user: User = Depends(require_admin)):
     for col_idx, val in enumerate(_ING_SAMPLE, 1):
         _sample_cell(ws, 3, col_idx, val)
 
-    # Dropdown para unidade_de_medida
+    # Dropdown para unidade_de_medida (coluna C = col 3)
     dv = DataValidation(type="list", formula1=f'"{_UNITS}"', showDropDown=False, showErrorMessage=True)
     dv.error = f"Use uma das unidades: {_UNITS}"
     dv.errorTitle = "Unidade inválida"
     ws.add_data_validation(dv)
-    dv.sqref = "B3:B5000"
+    dv.sqref = "C3:C5000"
 
     ws.freeze_panes = "A3"
     return _excel_response(wb, "modelo_insumos.xlsx")
@@ -124,16 +124,19 @@ async def import_ingredients(
             skipped += 1
             continue
 
-        name = str(row[0]).strip() if row[0] is not None else ""
-        unit = str(row[1]).strip() if row[1] is not None else ""
-        cost_raw = row[2]
-        code = str(row[3]).strip() if row[3] is not None else None
+        code = str(row[0]).strip() if row[0] is not None else ""
+        name = str(row[1]).strip() if row[1] is not None else ""
+        unit = str(row[2]).strip() if row[2] is not None else ""
+        cost_raw = row[3]
         category = str(row[4]).strip() if row[4] is not None else None
         supplier = str(row[5]).strip() if row[5] is not None else None
         notes = str(row[6]).strip() if row[6] is not None else None
 
+        if not code:
+            errors.append({"linha": row_idx, "erro": "Código é obrigatório"})
+            continue
         if not name:
-            errors.append({"linha": row_idx, "erro": "Nome é obrigatório"})
+            errors.append({"linha": row_idx, "erro": f"Cód {code}: nome é obrigatório"})
             continue
         if not unit:
             errors.append({"linha": row_idx, "erro": f"'{name}': unidade é obrigatória"})
@@ -166,14 +169,14 @@ async def import_ingredients(
 # ─── PRODUTOS ────────────────────────────────────────────────────────────────
 
 _PROD_COLS = [
+    ("codigo *", 15),
     ("nome *", 35),
-    ("codigo", 15),
     ("preco_de_venda", 18),
     ("curva_abc", 12),
     ("descricao", 40),
     ("modo_de_preparo", 50),
 ]
-_PROD_SAMPLE = ["X-Burguer Artesanal", "XB001", "29.90", "A", "Hambúrguer artesanal 180g", "Grelhar o blend por 4min de cada lado..."]
+_PROD_SAMPLE = ["XB001", "X-Burguer Artesanal", "29.90", "A", "Hambúrguer artesanal 180g", "Grelhar o blend por 4min de cada lado..."]
 
 
 @router.get("/template/products", summary="Baixar modelo Excel de produtos")
@@ -198,12 +201,12 @@ async def template_products(current_user: User = Depends(require_admin)):
     for col_idx, val in enumerate(_PROD_SAMPLE, 1):
         _sample_cell(ws, 3, col_idx, val)
 
-    # Dropdown para curva_abc
+    # Dropdown para curva_abc (coluna D = col 4)
     dv = DataValidation(type="list", formula1='"A,B,C"', showDropDown=False, showErrorMessage=True)
     dv.error = "Use A, B ou C"
     dv.errorTitle = "Curva inválida"
     ws.add_data_validation(dv)
-    dv.sqref = "D3:D5000"
+    dv.sqref = "D3:D5000"  # coluna D = curva_abc (4a coluna)
 
     ws.freeze_panes = "A3"
     return _excel_response(wb, "modelo_produtos.xlsx")
@@ -228,15 +231,18 @@ async def import_products(
             skipped += 1
             continue
 
-        name = str(row[0]).strip() if row[0] is not None else ""
-        code = str(row[1]).strip() if row[1] is not None else None
+        code = str(row[0]).strip() if row[0] is not None else ""
+        name = str(row[1]).strip() if row[1] is not None else ""
         price_raw = row[2]
         abc_raw = str(row[3]).strip().upper() if row[3] is not None else None
         description = str(row[4]).strip() if row[4] is not None else None
         preparation = str(row[5]).strip() if row[5] is not None else None
 
+        if not code:
+            errors.append({"linha": row_idx, "erro": "Código é obrigatório"})
+            continue
         if not name:
-            errors.append({"linha": row_idx, "erro": "Nome é obrigatório"})
+            errors.append({"linha": row_idx, "erro": f"Cód {code}: nome é obrigatório"})
             continue
 
         selling_price = None

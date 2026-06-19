@@ -28,7 +28,7 @@ export default function ProductDetailPage() {
   const [showChat,    setShowChat]    = useState(false);
 
   // formulário produto
-  const [pForm, setPForm] = useState({ name: "", description: "", preparation_method: "", abc_curve: "", selling_price: "" });
+  const [pForm, setPForm] = useState({ name: "", code: "", description: "", preparation_method: "", abc_curve: "", selling_price: "" });
 
   // formulário ficha técnica
   const [yieldQty,  setYieldQty]  = useState("1");
@@ -44,6 +44,7 @@ export default function ProductDetailPage() {
       setProduct(r.data);
       setPForm({
         name: r.data.name || "",
+        code: r.data.code || "",
         description: r.data.description || "",
         preparation_method: r.data.preparation_method || "",
         abc_curve: r.data.abc_curve || "",
@@ -67,11 +68,13 @@ export default function ProductDetailPage() {
 
   // ── salva produto ──────────────────────────────────────────────────────────
   async function saveProduct() {
+    if (!pForm.code.trim()) return toast.error("Código é obrigatório");
     if (!pForm.name.trim()) return toast.error("Nome é obrigatório");
     setSaving(true);
     try {
       const body: any = {
         name: pForm.name.trim(),
+        code: pForm.code.trim(),
         description: pForm.description.trim() || null,
         preparation_method: pForm.preparation_method.trim() || null,
         abc_curve: pForm.abc_curve || null,
@@ -170,9 +173,15 @@ export default function ProductDetailPage() {
               </>
             ) : (
               <div className="space-y-3 w-full">
-                <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Nome *</label>
-                  <input className="input" value={pForm.name} onChange={(e) => setPForm(f => ({ ...f, name: e.target.value }))} />
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">Código *</label>
+                    <input className="input" placeholder="XB001" value={pForm.code} onChange={(e) => setPForm(f => ({ ...f, code: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">Nome *</label>
+                    <input className="input" value={pForm.name} onChange={(e) => setPForm(f => ({ ...f, name: e.target.value }))} />
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>

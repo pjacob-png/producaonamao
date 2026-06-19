@@ -1,7 +1,7 @@
 import uuid
 from decimal import Decimal
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 
 class ProductBase(BaseModel):
@@ -16,7 +16,12 @@ class ProductBase(BaseModel):
 
 
 class ProductCreate(ProductBase):
-    pass
+    @field_validator("code")
+    @classmethod
+    def code_required(cls, v):
+        if not v or not str(v).strip():
+            raise ValueError("Código é obrigatório")
+        return str(v).strip()
 
 
 class ProductUpdate(BaseModel):

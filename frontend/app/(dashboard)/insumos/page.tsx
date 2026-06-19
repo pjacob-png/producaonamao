@@ -33,7 +33,9 @@ export default function InsumosPage() {
   }
 
   async function save() {
-    if (!form.name || !form.unit_cost) return toast.error("Preencha nome e custo unitário");
+    if (!form.code.trim()) return toast.error("Código é obrigatório");
+    if (!form.name.trim()) return toast.error("Nome é obrigatório");
+    if (!form.unit_cost) return toast.error("Custo unitário é obrigatório");
     const payload = { ...form, unit_cost: parseFloat(form.unit_cost) };
     try {
       if (editingId) {
@@ -138,7 +140,7 @@ export default function InsumosPage() {
         <div className="card border-brand-200 bg-orange-50 space-y-3">
           <h3 className="font-semibold text-sm">{editingId ? "Editar insumo" : "Novo insumo"}</h3>
           <div className="grid grid-cols-2 gap-3">
-            <div><label className="block text-xs text-gray-500 mb-1">Código</label><input className="input text-sm" placeholder="001" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} /></div>
+            <div><label className="block text-xs text-gray-500 mb-1">Código *</label><input className="input text-sm" placeholder="FT001" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} /></div>
             <div><label className="block text-xs text-gray-500 mb-1">Nome *</label><input className="input text-sm" placeholder="Farinha de trigo" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
             <div><label className="block text-xs text-gray-500 mb-1">Categoria</label><input className="input text-sm" placeholder="Secos" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} /></div>
             <div><label className="block text-xs text-gray-500 mb-1">Unidade *</label>

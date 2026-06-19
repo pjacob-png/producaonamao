@@ -25,13 +25,14 @@ export default function NovoProdutoPage() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (!form.code.trim()) return toast.error("Código é obrigatório");
     if (!form.name.trim()) return toast.error("Nome do produto é obrigatório");
 
     setLoading(true);
     try {
       const payload: any = {
         name: form.name.trim(),
-        code: form.code.trim() || null,
+        code: form.code.trim(),
         description: form.description.trim() || null,
         preparation_method: form.preparation_method.trim() || null,
         abc_curve: form.abc_curve || null,
@@ -80,7 +81,7 @@ export default function NovoProdutoPage() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Código interno
+              Código interno <span className="text-red-500">*</span>
             </label>
             <input
               className="input"
@@ -88,7 +89,6 @@ export default function NovoProdutoPage() {
               value={form.code}
               onChange={(e) => set("code", e.target.value)}
             />
-            <p className="text-xs text-gray-400 mt-1">Opcional — código do seu sistema ou cardápio</p>
           </div>
 
           <div>
