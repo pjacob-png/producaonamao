@@ -4,7 +4,7 @@ from datetime import datetime
 from pydantic import BaseModel, field_validator
 
 
-VALID_UNITS = {"kg", "g", "L", "ml", "un", "cx", "pc", "pct", "lt", "oz"}
+VALID_UNITS = {"kg", "g", "l", "ml", "un", "cx", "pc", "pct", "lt", "oz", "rl", "ds", "sc", "bd"}
 
 
 class IngredientBase(BaseModel):
@@ -16,13 +16,6 @@ class IngredientBase(BaseModel):
     supplier: str | None = None
     notes: str | None = None
     unit_id: uuid.UUID | None = None
-
-    @field_validator("unit_of_measure")
-    @classmethod
-    def valid_unit(cls, v):
-        if v not in VALID_UNITS:
-            raise ValueError(f"Unidade inválida. Use: {', '.join(sorted(VALID_UNITS))}")
-        return v
 
     @field_validator("unit_cost")
     @classmethod
@@ -39,6 +32,14 @@ class IngredientCreate(IngredientBase):
         if not v or not str(v).strip():
             raise ValueError("Código é obrigatório")
         return str(v).strip()
+
+    @field_validator("unit_of_measure")
+    @classmethod
+    def valid_unit(cls, v):
+        normalized = v.strip().lower()
+        if normalized not in VALID_UNITS:
+            raise ValueError(f"Unidade inválida '{v}'. Use: kg, g, L, ml, un, cx, pc, pct, lt, oz, rl, ds, sc")
+        return v
 
 
 class IngredientUpdate(BaseModel):

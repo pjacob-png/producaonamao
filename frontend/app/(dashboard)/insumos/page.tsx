@@ -27,8 +27,8 @@ export default function InsumosPage() {
   function load() {
     setLoading(true);
     ingredientsApi.list({ search: search || undefined })
-      .then((r) => setIngredients(r.data))
-      .catch(() => {})
+      .then((r) => setIngredients(Array.isArray(r.data) ? r.data : []))
+      .catch((err) => toast.error(err.response?.data?.detail || "Erro ao carregar insumos"))
       .finally(() => setLoading(false));
   }
 
@@ -79,7 +79,7 @@ export default function InsumosPage() {
         toast.success(`${r.data.criados} insumo(s) importado(s)!`);
         load();
       }
-      if (r.data.erros.length > 0 && r.data.criados === 0) {
+      if (r.data.erros?.length > 0 && r.data.criados === 0) {
         toast.error("Nenhum insumo importado — verifique os erros abaixo");
       }
     } catch (err: any) {
