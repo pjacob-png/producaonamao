@@ -19,6 +19,17 @@ from app.config import settings
 router = APIRouter(prefix="/products", tags=["Produtos"])
 
 
+async def _check_code_unique(db, tenant_id, code: str, exclude_id=None):
+    if not code:
+        return
+    q = select(Product).where(Product.tenant_id == tenant_id, Product.code == code)
+    if exclude_id:
+        q = q.where(Product.id != exclude_id)
+    existing = (await db.execute(q)).scalar_one_or_none()
+    if existing:
+        raise HTTPException(status_code=409, detail=f"Código '{code}' já está cadastrado em outro produto")
+
+
 @router.get("", response_model=list[ProductOut])
 async def list_products(
     search: str | None = Query(None),
@@ -50,6 +61,7 @@ async def create_product(
     current_user: User = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
 ):
+    await _check_code_unique(db, current_user.tenant_id, body.code)
     product = Product(tenant_id=current_user.tenant_id, **body.model_dump())
     db.add(product)
     await db.flush()
@@ -111,7 +123,10 @@ async def update_product(
     if not product:
         raise HTTPException(status_code=404, detail="Produto não encontrado")
 
-    for field, value in body.model_dump(exclude_none=True).items():
+    updates = body.model_dump(exclude_none=True)
+    if "code" in updates:
+        await _check_code_unique(db, current_user.tenant_id, updates["code"], exclude_id=product_id)
+    for field, value in updates.items():
         setattr(product, field, value)
 
     await log_action(db, tenant_id=current_user.tenant_id, user_id=current_user.id,

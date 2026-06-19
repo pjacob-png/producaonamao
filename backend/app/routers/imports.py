@@ -8,6 +8,7 @@ from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
 from fastapi import APIRouter, Depends, UploadFile, File
 from fastapi.responses import StreamingResponse
+from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
@@ -114,9 +115,16 @@ async def import_ingredients(
     wb = openpyxl.load_workbook(io.BytesIO(content), data_only=True)
     ws = wb.active
 
+    # Códigos já existentes no banco para este tenant
+    existing_codes_result = await db.execute(
+        select(Ingredient.code).where(Ingredient.tenant_id == current_user.tenant_id, Ingredient.code.isnot(None))
+    )
+    existing_codes = {r[0] for r in existing_codes_result.fetchall()}
+
     created = 0
     skipped = 0
     errors = []
+    batch_codes: set[str] = set()
 
     for row_idx, row in enumerate(ws.iter_rows(min_row=3, values_only=True), start=3):
         # Linha vazia
@@ -134,6 +142,12 @@ async def import_ingredients(
 
         if not code:
             errors.append({"linha": row_idx, "erro": "Código é obrigatório"})
+            continue
+        if code in existing_codes:
+            errors.append({"linha": row_idx, "erro": f"Código '{code}' já existe no sistema"})
+            continue
+        if code in batch_codes:
+            errors.append({"linha": row_idx, "erro": f"Código '{code}' duplicado neste arquivo"})
             continue
         if not name:
             errors.append({"linha": row_idx, "erro": f"Cód {code}: nome é obrigatório"})
@@ -160,10 +174,23 @@ async def import_ingredients(
             supplier=supplier or None,
             notes=notes or None,
         ))
+        batch_codes.add(code)
         created += 1
 
     await db.commit()
     return {"criados": created, "linhas_vazias_ignoradas": skipped, "erros": errors}
+
+
+@router.delete("/ingredients/all", summary="Excluir TODOS os insumos do tenant")
+async def delete_all_ingredients(
+    current_user: User = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        delete(Ingredient).where(Ingredient.tenant_id == current_user.tenant_id)
+    )
+    await db.commit()
+    return {"excluidos": result.rowcount}
 
 
 # ─── PRODUTOS ────────────────────────────────────────────────────────────────
@@ -222,9 +249,15 @@ async def import_products(
     wb = openpyxl.load_workbook(io.BytesIO(content), data_only=True)
     ws = wb.active
 
+    existing_codes_result = await db.execute(
+        select(Product.code).where(Product.tenant_id == current_user.tenant_id, Product.code.isnot(None))
+    )
+    existing_codes = {r[0] for r in existing_codes_result.fetchall()}
+
     created = 0
     skipped = 0
     errors = []
+    batch_codes: set[str] = set()
 
     for row_idx, row in enumerate(ws.iter_rows(min_row=3, values_only=True), start=3):
         if not any(cell for cell in row if cell is not None and str(cell).strip()):
@@ -240,6 +273,12 @@ async def import_products(
 
         if not code:
             errors.append({"linha": row_idx, "erro": "Código é obrigatório"})
+            continue
+        if code in existing_codes:
+            errors.append({"linha": row_idx, "erro": f"Código '{code}' já existe no sistema"})
+            continue
+        if code in batch_codes:
+            errors.append({"linha": row_idx, "erro": f"Código '{code}' duplicado neste arquivo"})
             continue
         if not name:
             errors.append({"linha": row_idx, "erro": f"Cód {code}: nome é obrigatório"})
@@ -271,6 +310,7 @@ async def import_products(
             description=description or None,
             preparation_method=preparation or None,
         ))
+        batch_codes.add(code)
         created += 1
 
     await db.commit()

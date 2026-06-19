@@ -1,7 +1,7 @@
 import uuid
 import enum
 from decimal import Decimal
-from sqlalchemy import String, Boolean, ForeignKey, Numeric, Text, Enum as SAEnum
+from sqlalchemy import String, Boolean, ForeignKey, Numeric, Text, Enum as SAEnum, UniqueConstraint
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 from sqlalchemy.dialects.postgresql import UUID
 from app.database import Base
@@ -16,6 +16,7 @@ class ABCCurve(str, enum.Enum):
 
 class Product(Base, TimestampMixin):
     __tablename__ = "products"
+    __table_args__ = (UniqueConstraint("tenant_id", "code", name="uq_products_tenant_code"),)
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=new_uuid)
     tenant_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)

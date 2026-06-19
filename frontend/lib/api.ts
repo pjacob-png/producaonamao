@@ -105,6 +105,7 @@ export const importsApi = {
     form.append("file", file);
     return api.post("/import/ingredients", form);
   },
+  deleteAllIngredients: () => api.delete("/import/ingredients/all"),
   downloadProductTemplate: async () => {
     const r = await api.get("/import/template/products", { responseType: "blob" });
     _downloadBlob(r.data, "modelo_produtos.xlsx");

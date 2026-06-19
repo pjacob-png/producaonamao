@@ -1,6 +1,6 @@
 import uuid
 from decimal import Decimal
-from sqlalchemy import String, Boolean, ForeignKey, Numeric, Text
+from sqlalchemy import String, Boolean, ForeignKey, Numeric, Text, UniqueConstraint
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 from sqlalchemy.dialects.postgresql import UUID
 from app.database import Base
@@ -9,6 +9,7 @@ from app.models._base import TimestampMixin, new_uuid
 
 class Ingredient(Base, TimestampMixin):
     __tablename__ = "ingredients"
+    __table_args__ = (UniqueConstraint("tenant_id", "code", name="uq_ingredients_tenant_code"),)
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=new_uuid)
     tenant_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)

@@ -34,12 +34,24 @@ async def list_ingredients(
     return result.scalars().all()
 
 
+async def _check_code_unique(db, tenant_id, code: str, exclude_id=None):
+    if not code:
+        return
+    q = select(Ingredient).where(Ingredient.tenant_id == tenant_id, Ingredient.code == code)
+    if exclude_id:
+        q = q.where(Ingredient.id != exclude_id)
+    existing = (await db.execute(q)).scalar_one_or_none()
+    if existing:
+        raise HTTPException(status_code=409, detail=f"Código '{code}' já está cadastrado em outro insumo")
+
+
 @router.post("", response_model=IngredientOut, status_code=status.HTTP_201_CREATED)
 async def create_ingredient(
     body: IngredientCreate,
     current_user: User = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
 ):
+    await _check_code_unique(db, current_user.tenant_id, body.code)
     ingredient = Ingredient(tenant_id=current_user.tenant_id, **body.model_dump())
     db.add(ingredient)
     await db.flush()
@@ -83,7 +95,10 @@ async def update_ingredient(
     if not ingredient:
         raise HTTPException(status_code=404, detail="Insumo não encontrado")
 
-    for field, value in body.model_dump(exclude_none=True).items():
+    updates = body.model_dump(exclude_none=True)
+    if "code" in updates:
+        await _check_code_unique(db, current_user.tenant_id, updates["code"], exclude_id=ingredient_id)
+    for field, value in updates.items():
         setattr(ingredient, field, value)
 
     await log_action(db, tenant_id=current_user.tenant_id, user_id=current_user.id,

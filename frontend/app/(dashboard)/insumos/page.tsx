@@ -2,7 +2,7 @@
 import { useEffect, useState, useRef } from "react";
 import { ingredientsApi, importsApi } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import { Plus, Search, Pencil, Trash2, X, Check, Download, Upload, AlertTriangle } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, X, Check, Download, Upload, AlertTriangle, RotateCcw } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function InsumosPage() {
@@ -19,6 +19,7 @@ export default function InsumosPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ criados: number; erros: any[] } | null>(null);
+  const [clearing, setClearing] = useState(false);
 
   useEffect(() => {
     load();
@@ -66,6 +67,21 @@ export default function InsumosPage() {
     catch { toast.error("Erro ao remover"); }
   }
 
+  async function clearAll() {
+    if (!confirm(`Tem certeza? Isso vai excluir TODOS os ${ingredients.length} insumo(s) permanentemente. Esta ação não pode ser desfeita.`)) return;
+    if (!confirm("Confirme novamente: excluir todos os insumos?")) return;
+    setClearing(true);
+    try {
+      const r = await importsApi.deleteAllIngredients();
+      toast.success(`${r.data.excluidos} insumo(s) excluído(s)`);
+      load();
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || "Erro ao excluir insumos");
+    } finally {
+      setClearing(false);
+    }
+  }
+
   async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -105,6 +121,12 @@ export default function InsumosPage() {
               className="btn-secondary flex items-center gap-1.5 text-sm">
               <Upload size={15} /> {importing ? "Importando..." : "Importar Excel"}
             </button>
+            {ingredients.length > 0 && (
+              <button onClick={clearAll} disabled={clearing}
+                className="flex items-center gap-1.5 text-sm px-3 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors">
+                <RotateCcw size={15} /> {clearing ? "Excluindo..." : "Limpar tudo"}
+              </button>
+            )}
             <button onClick={() => { setShowForm(true); setEditingId(null); setForm({ code: "", name: "", category: "", unit_of_measure: "kg", unit_cost: "", supplier: "" }); }}
               className="btn-primary flex items-center gap-2 text-sm">
               <Plus size={16} /> Novo insumo
