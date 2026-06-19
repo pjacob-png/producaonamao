@@ -162,7 +162,7 @@ async def import_ingredients(
         ))
         created += 1
 
-    await db.flush()
+    await db.commit()
     return {"criados": created, "linhas_vazias_ignoradas": skipped, "erros": errors}
 
 
@@ -273,5 +273,5 @@ async def import_products(
         ))
         created += 1
 
-    await db.flush()
+    await db.commit()
     return {"criados": created, "linhas_vazias_ignoradas": skipped, "erros": errors}
