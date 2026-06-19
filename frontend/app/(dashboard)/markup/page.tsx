@@ -26,11 +26,20 @@ export default function MarkupPage() {
   async function saveRule() {
     if (!form.name || !form.markup_value) return toast.error("Preencha nome e valor");
     try {
-      await markupApi.createRule({ ...form, markup_value: parseFloat(form.markup_value), priority: parseInt(form.priority) });
+      await markupApi.createRule({
+        name: form.name,
+        applies_to: form.applies_to,
+        markup_type: form.markup_type,
+        markup_value: parseFloat(form.markup_value),
+        priority: parseInt(form.priority) || 0,
+        abc_curve: form.applies_to === "curve" && form.abc_curve ? form.abc_curve : null,
+        category_id: null,
+      });
       toast.success("Regra criada!");
       setShowForm(false);
+      setForm({ name: "", applies_to: "global", markup_type: "percentage_over_cost", markup_value: "", priority: "0", abc_curve: "" });
       markupApi.listRules().then((r) => setRules(r.data));
-    } catch (e: any) { toast.error(e.response?.data?.detail || "Erro"); }
+    } catch (e: any) { toast.error(e.response?.data?.detail || "Erro ao criar regra"); }
   }
 
   async function deleteRule(id: string) {

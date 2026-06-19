@@ -129,18 +129,14 @@ export default function ConfiguracoesPage() {
               {user?.plan === "network" && "Ilimitado · WhatsApp · ERP"}
             </p>
           </div>
-          <a
-            href="mailto:contato@producaonamao.com.br?subject=Upgrade de plano"
-            className="text-xs text-brand-600 font-semibold underline"
-          >
-            Fazer upgrade
-          </a>
+          <span className="text-xs text-gray-400">
+            E-mail: <span className="text-brand-600 font-medium select-all">suporte@producaonamao.com.br</span>
+          </span>
         </div>
         <p className="text-xs text-gray-400 mt-3">
-          Para alterar ou cancelar a assinatura, entre em contato:{" "}
-          <a href="mailto:suporte@producaonamao.com.br" className="text-brand-600">
-            suporte@producaonamao.com.br
-          </a>
+          Para fazer upgrade ou cancelar, envie e-mail para:{" "}
+          <span className="text-brand-600 font-medium select-all">suporte@producaonamao.com.br</span>
+          {" "}com o assunto <strong>"Alteração de plano"</strong>.
         </p>
       </div>
 
