@@ -138,9 +138,9 @@ export default function ProductDetailPage() {
 
   if (!product) return <div className="text-center py-20 text-gray-400">Carregando...</div>;
 
-  const cmvPct  = product.cmv_percentage  ? parseFloat(product.cmv_percentage)  : null;
-  const margin  = product.gross_margin    ? parseFloat(product.gross_margin)     : null;
-  const suggested = product.suggested_price ? parseFloat(product.suggested_price) : null;
+  const cmvPct    = product.cmv_percentage  != null ? parseFloat(product.cmv_percentage)  : null;
+  const margin    = product.gross_margin    != null ? parseFloat(product.gross_margin)     : null;
+  const suggested = product.suggested_price != null ? parseFloat(product.suggested_price) : null;
 
   return (
     <div className="max-w-3xl space-y-6">
@@ -230,14 +230,12 @@ export default function ProductDetailPage() {
       </div>
 
       {/* ── CMV e Preço sugerido ────────────────────────────────────────────── */}
-      {isAdmin && (product.cmv_value || suggested) && (
+      {isAdmin && product.cmv_value != null && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {product.cmv_value && (
-            <div className="card text-center">
-              <p className="text-xs text-gray-400">Custo da receita</p>
-              <p className="text-lg font-bold mt-1">R$ {parseFloat(product.cmv_value).toFixed(2).replace(".", ",")}</p>
-            </div>
-          )}
+          <div className="card text-center">
+            <p className="text-xs text-gray-400">Custo da receita</p>
+            <p className="text-lg font-bold mt-1">R$ {parseFloat(product.cmv_value).toFixed(2).replace(".", ",")}</p>
+          </div>
           {cmvPct !== null && (
             <div className={`card text-center ${cmvPct > 40 ? "border-red-200 bg-red-50" : cmvPct > 30 ? "border-orange-200 bg-orange-50" : "border-green-200 bg-green-50"}`}>
               <p className="text-xs text-gray-400">CMV</p>
@@ -250,11 +248,17 @@ export default function ProductDetailPage() {
               <p className={`text-lg font-bold mt-1 ${margin < 50 ? "text-orange-600" : "text-green-600"}`}>{margin.toFixed(1)}%</p>
             </div>
           )}
-          {suggested && (
+          {suggested !== null ? (
             <div className="card text-center border-brand-200 bg-orange-50">
               <p className="text-xs text-gray-400 flex items-center justify-center gap-1"><TrendingUp size={10} />Preço sugerido</p>
               <p className="text-lg font-bold mt-1 text-brand-600">R$ {suggested.toFixed(2).replace(".", ",")}</p>
               <p className="text-xs text-gray-400 mt-1">(markup configurado)</p>
+            </div>
+          ) : (
+            <div className="card text-center border-dashed border-gray-200 bg-gray-50">
+              <p className="text-xs text-gray-400 flex items-center justify-center gap-1"><TrendingUp size={10} />Preço sugerido</p>
+              <p className="text-xs text-gray-400 mt-2">Configure uma regra em</p>
+              <Link href="/markup" className="text-xs text-brand-500 underline">Markup & Preços</Link>
             </div>
           )}
         </div>

@@ -1,13 +1,15 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { markupApi } from "@/lib/api";
-import { Plus, Trash2, TrendingUp, Lightbulb } from "lucide-react";
+import { Plus, Trash2, TrendingUp, Lightbulb, RefreshCw } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function MarkupPage() {
   const [rules, setRules] = useState<any[]>([]);
   const [prices, setPrices] = useState<any[]>([]);
   const [promos, setPromos] = useState<any[]>([]);
+  const [pricesError, setPricesError] = useState<string | null>(null);
+  const [loadingPrices, setLoadingPrices] = useState(false);
   const [tab, setTab] = useState<"rules" | "prices" | "promos">("rules");
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: "", applies_to: "global", markup_type: "percentage_over_cost", markup_value: "", priority: "0", abc_curve: "" });
@@ -16,9 +18,23 @@ export default function MarkupPage() {
     markupApi.listRules().then((r) => setRules(r.data)).catch(() => {});
   }, []);
 
+  const loadPrices = useCallback(async () => {
+    setLoadingPrices(true);
+    setPricesError(null);
+    try {
+      const r = await markupApi.suggestPrices();
+      setPrices(r.data);
+    } catch (e: any) {
+      const msg = e.response?.data?.detail || "Erro ao carregar preços sugeridos";
+      setPricesError(msg);
+      toast.error(msg);
+    } finally {
+      setLoadingPrices(false);
+    }
+  }, []);
+
   useEffect(() => {
-    if (tab === "prices" && prices.length === 0)
-      markupApi.suggestPrices().then((r) => setPrices(r.data)).catch(() => {});
+    if (tab === "prices") loadPrices();
     if (tab === "promos" && promos.length === 0)
       markupApi.promotions().then((r) => setPromos(r.data)).catch(() => {});
   }, [tab]);
@@ -115,30 +131,53 @@ export default function MarkupPage() {
       )}
 
       {tab === "prices" && (
-        <div className="card p-0 overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b">
-              <tr>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Produto</th>
-                <th className="px-4 py-3 text-right font-medium text-gray-500">CMV</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Regra</th>
-                <th className="px-4 py-3 text-right font-medium text-gray-500">Preço sugerido</th>
-                <th className="px-4 py-3 text-right font-medium text-gray-500">Margem</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {prices.map((p) => (
-                <tr key={p.product_id}>
-                  <td className="px-4 py-3 font-medium">{p.product_name}</td>
-                  <td className="px-4 py-3 text-right font-mono text-gray-600">R$ {parseFloat(p.cmv_value).toFixed(2)}</td>
-                  <td className="px-4 py-3 text-xs text-gray-500">{p.rule_applied}</td>
-                  <td className="px-4 py-3 text-right font-mono font-semibold text-brand-600">R$ {parseFloat(p.suggested_price).toFixed(2)}</td>
-                  <td className={`px-4 py-3 text-right font-medium ${parseFloat(p.gross_margin_pct) < 50 ? "text-red-500" : "text-green-600"}`}>{parseFloat(p.gross_margin_pct).toFixed(1)}%</td>
+        <div className="space-y-3">
+          <div className="flex justify-end">
+            <button onClick={loadPrices} disabled={loadingPrices} className="btn-secondary text-xs flex items-center gap-1">
+              <RefreshCw size={12} className={loadingPrices ? "animate-spin" : ""} />
+              {loadingPrices ? "Carregando..." : "Recarregar"}
+            </button>
+          </div>
+          {pricesError && (
+            <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">
+              Erro: {pricesError}
+            </div>
+          )}
+          <div className="card p-0 overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b">
+                <tr>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500">Produto</th>
+                  <th className="px-4 py-3 text-right font-medium text-gray-500">CMV</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500">Regra aplicada</th>
+                  <th className="px-4 py-3 text-right font-medium text-gray-500">Preço sugerido</th>
+                  <th className="px-4 py-3 text-right font-medium text-gray-500">Margem</th>
                 </tr>
-              ))}
-              {prices.length === 0 && <tr><td colSpan={5} className="px-4 py-10 text-center text-gray-400">Cadastre insumos e fichas técnicas para ver os preços sugeridos.</td></tr>}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {prices.map((p) => (
+                  <tr key={p.product_id}>
+                    <td className="px-4 py-3 font-medium">{p.product_name}</td>
+                    <td className="px-4 py-3 text-right font-mono text-gray-600">R$ {parseFloat(p.cmv_value).toFixed(2)}</td>
+                    <td className="px-4 py-3 text-xs text-gray-500">{p.rule_applied}</td>
+                    <td className="px-4 py-3 text-right font-mono font-semibold text-brand-600">R$ {parseFloat(p.suggested_price).toFixed(2)}</td>
+                    <td className={`px-4 py-3 text-right font-medium ${parseFloat(p.gross_margin_pct) < 50 ? "text-red-500" : "text-green-600"}`}>{parseFloat(p.gross_margin_pct).toFixed(1)}%</td>
+                  </tr>
+                ))}
+                {!loadingPrices && !pricesError && prices.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-10 text-center text-gray-400">
+                      <p>Nenhum preço sugerido ainda.</p>
+                      <p className="text-xs mt-1">Verifique: 1) insumos com custo cadastrado, 2) ficha técnica vinculada ao produto, 3) regra de markup ativa na aba "Regras de Markup".</p>
+                    </td>
+                  </tr>
+                )}
+                {loadingPrices && (
+                  <tr><td colSpan={5} className="px-4 py-10 text-center text-gray-400">Calculando preços...</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
