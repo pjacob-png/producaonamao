@@ -51,7 +51,7 @@ export const productsApi = {
   uploadPhoto: (id: string, file: File) => {
     const form = new FormData();
     form.append("file", file);
-    return api.post(`/products/${id}/photo`, form, { headers: { "Content-Type": "multipart/form-data" } });
+    return api.post(`/products/${id}/photo`, form);
   },
 };
 
@@ -103,7 +103,7 @@ export const importsApi = {
   importIngredients: (file: File) => {
     const form = new FormData();
     form.append("file", file);
-    return api.post("/import/ingredients", form, { headers: { "Content-Type": "multipart/form-data" } });
+    return api.post("/import/ingredients", form);
   },
   downloadProductTemplate: async () => {
     const r = await api.get("/import/template/products", { responseType: "blob" });
@@ -112,6 +112,6 @@ export const importsApi = {
   importProducts: (file: File) => {
     const form = new FormData();
     form.append("file", file);
-    return api.post("/import/products", form, { headers: { "Content-Type": "multipart/form-data" } });
+    return api.post("/import/products", form);
   },
 };
